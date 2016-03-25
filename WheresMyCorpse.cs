@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Oxide.Plugins
 {
-    [Info("Where's My Corpse", "LeoCurtss", 0.3)]
+    [Info("Where's My Corpse", "LeoCurtss", 0.4)]
     [Description("Points a player to their corpse when they type a command.")]
 
     class WheresMyCorpse : RustPlugin
@@ -77,13 +77,11 @@ namespace Oxide.Plugins
 				
 				float distanceToCorpse = Vector3.Distance(lastDeathPosition,currentPosition);
 				
-				//SendReply(player, "Your corpse was last seen " + distanceToCorpse.ToString() + " meters from here." );
 				SendReply(player,string.Format(GetMessage("WMC_LastSeen",player.UserIDString),distanceToCorpse.ToString("0")));
 				drawArrow(player,60.0f);
 			}
 			else
 			{
-				//SendReply(player, "No data was found on your last death.  The WheresMyCorpse plugin may have been reloaded or you have not died yet.");
 				SendReply(player,GetMessage("WMC_NoData",player.UserIDString));
 			}
 		}
@@ -119,10 +117,15 @@ namespace Oxide.Plugins
 			Vector3 arrowBasePosition = LerpByDistance(currentPosition + new Vector3(0, 1, 0),lastDeathPosition + new Vector3(0, 1, 0),3);
 			Vector3 arrowPointPosition = LerpByDistance(currentPosition + new Vector3(0, 1, 0),lastDeathPosition + new Vector3(0, 1, 0),6);
 			
+			Vector3 beaconBasePosition = lastDeathPosition;
+			Vector3 beaconPointPosition = lastDeathPosition + new Vector3(0, 1000, 0);
+			
 			Color arrowColor = new Color(1, 0, 0, 1);
 			Color textColor = new Color(1,0,0,1);
+			Color beaconColor = new Color(1,0,0,1);
 			player.SendConsoleCommand("ddraw.arrow", duration, arrowColor, arrowBasePosition, arrowPointPosition, 0.5f);
 			player.SendConsoleCommand("ddraw.text", duration, textColor, arrowBasePosition, "Distance: " + distanceToCorpse.ToString("0") + " meters");
+			player.SendConsoleCommand("ddraw.arrow", duration, arrowColor, beaconBasePosition, beaconPointPosition, 1.0f);
 		}
 		
 		public Vector3 getVector3(string rString){
