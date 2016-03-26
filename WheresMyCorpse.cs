@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Oxide.Plugins
 {
-    [Info("Where's My Corpse", "LeoCurtss", 0.4)]
+    [Info("Where's My Corpse", "LeoCurtss", 0.5)]
     [Description("Points a player to their corpse when they type a command.")]
 
     class WheresMyCorpse : RustPlugin
@@ -16,10 +16,13 @@ namespace Oxide.Plugins
         {
             LoadData();
 			
+			permission.RegisterPermission("wheresmycorpse.canuse", this);
+			
 			//Lang API dictionary
 			lang.RegisterMessages(new Dictionary<string,string>{
 				["WMC_NoData"] = "No data was found on your last death.  The WheresMyCorpse plugin may have been reloaded or you have not died yet.",
-				["WMC_LastSeen"] = "Your corpse was last seen {0} meters from here."
+				["WMC_LastSeen"] = "Your corpse was last seen {0} meters from here.",
+				["WMC_NoPermission"] = "You do not have permission to use that command."
 			}, this);
         }
 		
@@ -70,40 +73,48 @@ namespace Oxide.Plugins
 		
 		void OnPlayerRespawned(BasePlayer player)
 		{
-			if (deathInfo.ContainsKey(player.UserIDString))
+            if (permission.UserHasPermission(player.userID.ToString(), "wheresmycorpse.canuse"))
 			{
-				Vector3 lastDeathPosition = getVector3(deathInfo[player.UserIDString]);
-				Vector3 currentPosition = player.transform.position;
-				
-				float distanceToCorpse = Vector3.Distance(lastDeathPosition,currentPosition);
-				
-				SendReply(player,string.Format(GetMessage("WMC_LastSeen",player.UserIDString),distanceToCorpse.ToString("0")));
-				drawArrow(player,60.0f);
-			}
-			else
-			{
-				SendReply(player,GetMessage("WMC_NoData",player.UserIDString));
+				if (deathInfo.ContainsKey(player.UserIDString))
+				{
+					Vector3 lastDeathPosition = getVector3(deathInfo[player.UserIDString]);
+					Vector3 currentPosition = player.transform.position;
+					
+					float distanceToCorpse = Vector3.Distance(lastDeathPosition,currentPosition);
+					
+					SendReply(player,string.Format(GetMessage("WMC_LastSeen",player.UserIDString),distanceToCorpse.ToString("0")));
+					drawArrow(player,60.0f);
+				}
+				else
+				{
+					SendReply(player,GetMessage("WMC_NoData",player.UserIDString));
+				}
 			}
 		}
 		
 		[ChatCommand("where")]
         void TestCommand(BasePlayer player, string command, string[] args)
         {
-            if (deathInfo.ContainsKey(player.UserIDString))
+            if (permission.UserHasPermission(player.userID.ToString(), "wheresmycorpse.canuse"))
 			{
-				Vector3 lastDeathPosition = getVector3(deathInfo[player.UserIDString]);
-				Vector3 currentPosition = player.transform.position;
-				
-				float distanceToCorpse = Vector3.Distance(lastDeathPosition,currentPosition);
-				
-				//SendReply(player, "Your corpse was last seen " + distanceToCorpse.ToString("0") + " meters from here." );
-				SendReply(player,string.Format(GetMessage("WMC_LastSeen",player.UserIDString),distanceToCorpse.ToString("0")));
-				drawArrow(player,30.0f);
+				if (deathInfo.ContainsKey(player.UserIDString))
+				{
+					Vector3 lastDeathPosition = getVector3(deathInfo[player.UserIDString]);
+					Vector3 currentPosition = player.transform.position;
+					
+					float distanceToCorpse = Vector3.Distance(lastDeathPosition,currentPosition);
+					
+					SendReply(player,string.Format(GetMessage("WMC_LastSeen",player.UserIDString),distanceToCorpse.ToString("0")));
+					drawArrow(player,30.0f);
+				}
+				else
+				{
+					SendReply(player,GetMessage("WMC_NoData",player.UserIDString));
+				}
 			}
 			else
 			{
-				//SendReply(player, "No data was found on your last death.  The WheresMyCorpse plugin may have been reloaded or you have not died yet.");
-				SendReply(player,GetMessage("WMC_NoData",player.UserIDString));
+				SendReply(player,GetMessage("WMC_NoPermission",player.UserIDString));
 			}
         }
 		
